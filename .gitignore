@@ -1,1 +1,5 @@
 /.idea
+
+/core/target
+/core/src/bridge_generated.io.rs
+/core/src/bridge_generated.rs

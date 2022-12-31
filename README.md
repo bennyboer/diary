@@ -11,7 +11,7 @@ Thus, I decided to create a digital diary that is secure and easy to use.
 ## Technology
 
 The project is a local Desktop application that stores all data locally in a Git repository.
-If you want to save your date in the cloud you can add a remote repository (should be private). 
+If you want to save your date in the cloud you can add a remote repository (should be private).
 All files in the repository are encrypted using the ChaCha20-Poly1305 cipher which uses a 256-Bit key.
 That is plenty to protect your diary for the next years.
 The key is derived from a password using the **Argon2** algorithm, which is currently the recommended algorithm.
@@ -25,3 +25,15 @@ TODO
 ## Usage
 
 TODO
+
+## Getting started
+
+### Prerequisites
+
+- Install Rust
+- Install Flutter
+- Install LLVM (https://pub.dev/packages/ffigen#installing-llvm)
+
+### Rebuilding Flutter <> Rust bridge
+
+Run `./tools/build_bridge.sh` or `./tools/build_bridge.bat` depending on your OS
