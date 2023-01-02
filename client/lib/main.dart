@@ -1,8 +1,20 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:client/pages/calendar.dart';
+import 'package:client/pages/editor.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const DiaryApp());
+
+  doWhenWindowReady(() {
+    const initialSize = Size(900, 700);
+
+    appWindow.title = "Diary";
+    appWindow.minSize = initialSize;
+    appWindow.size = initialSize;
+    appWindow.alignment = Alignment.center;
+    appWindow.show();
+  });
 }
 
 class DiaryApp extends StatelessWidget {
@@ -13,9 +25,22 @@ class DiaryApp extends StatelessWidget {
     return MaterialApp(
       title: 'Diary',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primarySwatch: Colors.blue,
       ),
-      home: const CalendarPage(),
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case "/editor":
+            return MaterialPageRoute(
+              builder: (context) =>
+                  EditorPage(date: settings.arguments as DateTime),
+            );
+          default:
+            return MaterialPageRoute(
+              builder: (context) => const CalendarPage(),
+            );
+        }
+      },
     );
   }
 }
