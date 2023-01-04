@@ -1,4 +1,3 @@
-import 'package:client/native.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -75,12 +74,5 @@ class _CalendarPageState extends State<CalendarPage> {
         todayTextStyle: TextStyle(color: Colors.black),
       ),
     );
-  }
-
-  _calc() async {
-    var calcResult = await api.add(left: 2, right: 2);
-    setState(() {
-      result = calcResult.toString();
-    });
   }
 }
