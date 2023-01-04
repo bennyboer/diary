@@ -1,8 +1,8 @@
-import 'dart:io';
-
 import 'package:client/native.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../storage.dart';
 
 class EditorPage extends StatefulWidget {
   final DateTime date;
@@ -16,51 +16,21 @@ class EditorPage extends StatefulWidget {
 class _EditorPageState extends State<EditorPage> {
   static final DateFormat _dateFormat = DateFormat('dd. MMMM yyyy');
 
+  String _originalText = "";
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-
-    _loadDate();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_dateFormat.format(widget.date)),
-        centerTitle: true,
-        leading: BackButton(onPressed: () => _requestClose(context)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
+      appBar: _buildAppBar(context),
       body: SafeArea(
         child: FutureBuilder(
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return Scrollbar(
-                controller: _scrollController,
-                child: TextField(
-                  controller: _textEditingController,
-                  scrollController: _scrollController,
-                  autofocus: true,
-                  expands: true,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  autocorrect: false,
-                  onChanged: (s) => {},
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(20.0),
-                    isDense: true,
-                  ),
-                ),
-              );
+              return _buildTextfield();
             } else {
-              return const Center(child: CircularProgressIndicator());
+              return _buildLoadingIndicator();
             }
           },
           future: _load(),
@@ -69,11 +39,46 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
-  Future<String> _loadDate() {
-    return Future.value('Test'); // TODO Load diary file if present
+  Center _buildLoadingIndicator() =>
+      const Center(child: CircularProgressIndicator());
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text(_dateFormat.format(widget.date)),
+      centerTitle: true,
+      leading: BackButton(onPressed: () => _requestClose(context)),
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.black,
+      elevation: 0,
+    );
   }
 
+  Scrollbar _buildTextfield() => Scrollbar(
+        controller: _scrollController,
+        child: TextField(
+          controller: _textEditingController,
+          scrollController: _scrollController,
+          autofocus: true,
+          expands: true,
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          autocorrect: false,
+          onChanged: (s) => {},
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.all(20.0),
+            isDense: true,
+          ),
+        ),
+      );
+
   Future<void> _requestClose(BuildContext context) async {
+    bool isUnchanged = _originalText == _textEditingController.text;
+    if (isUnchanged) {
+      Navigator.pop(context);
+      return;
+    }
+
     bool saveChanges = await showDialog(
       context: context,
       barrierDismissible: false,
@@ -112,42 +117,30 @@ class _EditorPageState extends State<EditorPage> {
 
   Future<void> _load() async {
     var diaryFile = _getDiaryFile();
-    var text = await api.load(filePath: diaryFile, password: "password"); // TODO Let the user enter the password
+    var text = await api.load(
+      filePath: diaryFile,
+      password: "password",
+    ); // TODO Let the user enter the password
 
+    _originalText = text;
     _textEditingController.text = text;
   }
 
   Future<void> _save() async {
-    var text = _getText();
     var diaryFile = _getDiaryFile();
 
-    api.save(filePath: diaryFile, password: "password", data: text); // TODO Let the user enter the password
+    api.save(
+      filePath: diaryFile,
+      password: "password",
+      data: text,
+    ); // TODO Let the user enter the password
   }
 
-  String _getDiaryFile() {
-    var homeDir = _getHomeDir()!;
-    var diaryDir = "$homeDir/.diary";
-    var monthDir = "$diaryDir/${widget.date.year}/${widget.date.month}";
+  String _getDiaryFile() => DiaryStorage.getDiaryFilePath(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+      );
 
-    return "$monthDir/${widget.date.day}";
-  }
-
-  String? _getHomeDir() {
-    Map<String, String> env = Platform.environment;
-    if (Platform.isMacOS) {
-      return env['HOME'];
-    } else if (Platform.isLinux) {
-      return env['HOME'];
-    } else if (Platform.isWindows) {
-      return env['USERPROFILE'];
-    } else if (Platform.isAndroid) {
-      return "/storage/sdcard0";
-    }
-
-    throw Exception('Unsupported platform');
-  }
-
-  String _getText() {
-    return _textEditingController.text;
-  }
+  String get text => _textEditingController.text;
 }
