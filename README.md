@@ -2,6 +2,10 @@
 
 > A digital diary with state-of-the-art encryption.
 
+![Calendar](assets/calendar.png)
+
+![Editor](assets/editor.png)
+
 ## Background
 
 I feel like the days of traditional diaries are over.
@@ -20,11 +24,22 @@ In the future we might add support for a second factor like a FIDO2 key that off
 
 ## Installation
 
-TODO
+### Build it yourself
+
+```bash
+cd client
+flutter build windows
+```
+
+You'll find the executable in `client/build/windows/runner/Release/`.
 
 ## Usage
 
-TODO
+The app currently consists of a simple calendar that just shows whether a day has an entry or not.
+When clicking on the day in the calendar you'll be able to either create a new entry or edit an existing one (if you
+know the password for decryption at least).
+
+The encrypted diary entries are stored under your home directory in a folder named `.diary`.
 
 ## Getting started
 
