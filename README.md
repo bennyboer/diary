@@ -2,6 +2,8 @@
 
 > A digital diary with state-of-the-art encryption.
 
+**THIS PROJECT IS WORK-IN-PROGRESS AND SHOULD NOT YET BE USED FOR REAL DIARIES**
+
 ## Background
 
 I feel like the days of traditional diaries are over.
