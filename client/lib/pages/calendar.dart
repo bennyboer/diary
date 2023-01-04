@@ -1,7 +1,10 @@
 import 'dart:collection';
 
+import 'package:client/edit_command.dart';
+import 'package:client/password_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../native.dart';
 import '../storage.dart';
@@ -13,7 +16,8 @@ class CalendarPage extends StatefulWidget {
   State<StatefulWidget> createState() => _CalendarPageState();
 }
 
-class _CalendarPageState extends State<CalendarPage> {
+class _CalendarPageState extends State<CalendarPage>
+    with WidgetsBindingObserver, WindowListener {
   String result = "{Click button}";
 
   late DateTime _selectedDay;
@@ -33,6 +37,9 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    windowManager.addListener(this);
+    windowManager.setPreventClose(true);
 
     var now = DateTime.now();
     _selectedDay = now;
@@ -42,6 +49,26 @@ class _CalendarPageState extends State<CalendarPage> {
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _loadEntries(_focusedDay));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    await PasswordManager.clear();
+    await windowManager.destroy();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      PasswordManager.clear();
+    }
   }
 
   @override
@@ -121,7 +148,15 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _openEditor(DateTime selectedDay) async {
-    await Navigator.pushNamed(context, '/editor', arguments: selectedDay);
+    var createNewEntry = !availableEntries.contains(selectedDay);
+    await Navigator.pushNamed(
+      context,
+      '/editor',
+      arguments: EditCommand(
+        date: selectedDay,
+        createNewEntry: createNewEntry,
+      ),
+    );
 
     _loadEntries(_focusedDay);
   }

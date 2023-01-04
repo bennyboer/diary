@@ -1,4 +1,5 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:client/edit_command.dart';
 import 'package:client/pages/calendar.dart';
 import 'package:client/pages/editor.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class DiaryApp extends StatelessWidget {
           case "/editor":
             return MaterialPageRoute(
               builder: (context) =>
-                  EditorPage(date: settings.arguments as DateTime),
+                  EditorPage(cmd: settings.arguments as EditCommand),
             );
           default:
             return MaterialPageRoute(

@@ -1,13 +1,16 @@
 import 'package:client/native.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:prompt_dialog/prompt_dialog.dart';
 
+import '../edit_command.dart';
+import '../password_manager.dart';
 import '../storage.dart';
 
 class EditorPage extends StatefulWidget {
-  final DateTime date;
+  final EditCommand cmd;
 
-  const EditorPage({super.key, required this.date});
+  const EditorPage({super.key, required this.cmd});
 
   @override
   State<StatefulWidget> createState() => _EditorPageState();
@@ -33,7 +36,7 @@ class _EditorPageState extends State<EditorPage> {
               return _buildLoadingIndicator();
             }
           },
-          future: _load(),
+          future: _load(context),
         ),
       ),
     );
@@ -44,7 +47,7 @@ class _EditorPageState extends State<EditorPage> {
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text(_dateFormat.format(widget.date)),
+      title: Text(_dateFormat.format(widget.cmd.date)),
       centerTitle: true,
       leading: BackButton(onPressed: () => _requestClose(context)),
       backgroundColor: Colors.transparent,
@@ -86,10 +89,11 @@ class _EditorPageState extends State<EditorPage> {
     );
 
     if (saveChanges) {
-      _save();
+      await _save(context);
 
       final snackBar = SnackBar(
-        content: Text('Changes to ${_dateFormat.format(widget.date)} saved'),
+        content:
+            Text('Changes to ${_dateFormat.format(widget.cmd.date)} saved'),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -115,32 +119,78 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
-  Future<void> _load() async {
+  Future<void> _load(BuildContext context) async {
     var diaryFile = _getDiaryFile();
-    var text = await api.load(
-      filePath: diaryFile,
-      password: "password",
-    ); // TODO Let the user enter the password
+
+    var text = "";
+    var shouldLoadEntry = !widget.cmd.createNewEntry;
+    while (shouldLoadEntry) {
+      try {
+        var password = await _requestPassword(context);
+
+        text = await api.load(
+          filePath: diaryFile,
+          password: password,
+        );
+        break;
+      } catch (e) {
+        if (e is bool && !e) {
+          Navigator.pop(context);
+          return;
+        }
+
+        await PasswordManager.clear();
+
+        const snackBar = SnackBar(
+          content: Text(
+              'The diary could not be decrypted. Maybe the password is wrong?'),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
 
     _originalText = text;
     _textEditingController.text = text;
   }
 
-  Future<void> _save() async {
+  Future<void> _save(BuildContext context) async {
     var diaryFile = _getDiaryFile();
+    var password = await _requestPassword(context);
 
     api.save(
       filePath: diaryFile,
-      password: "password",
+      password: password,
       data: text,
-    ); // TODO Let the user enter the password
+    );
   }
 
   String _getDiaryFile() => DiaryStorage.getDiaryFilePath(
-        widget.date.year,
-        widget.date.month,
-        widget.date.day,
+        widget.cmd.date.year,
+        widget.cmd.date.month,
+        widget.cmd.date.day,
       );
 
   String get text => _textEditingController.text;
+
+  Future<String> _requestPassword(BuildContext context) async {
+    if (await PasswordManager.hasPassword()) {
+      return await PasswordManager.readPassword() ?? "";
+    } else {
+      var password = await prompt(
+        context,
+        title: const Text('Enter password'),
+        obscureText: true,
+        autoFocus: true,
+        showPasswordIcon: true
+      );
+      if (password == null) {
+        throw false;
+      }
+
+      await PasswordManager.savePassword(password);
+
+      return password;
+    }
+  }
 }
