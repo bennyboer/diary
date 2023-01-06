@@ -241,6 +241,7 @@ class _EditorPageState extends State<EditorPage> {
           textStyle: const TextStyle(fontFamily: 'SourceCode'),
           background: Theme.of(context).scaffoldBackgroundColor,
           expands: true,
+          wrap: true,
           onChanged: (text) {
             if (_showPreview) {
               setState(() {});
@@ -252,6 +253,7 @@ class _EditorPageState extends State<EditorPage> {
   Widget _buildPreview(BuildContext context) {
     return MarkdownWidget(
       data: text,
+      padding: const EdgeInsets.all(8),
       styleConfig: StyleConfig(
         markdownTheme: DiaryApp.of(context).isDark(context)
             ? MarkdownTheme.darkTheme
