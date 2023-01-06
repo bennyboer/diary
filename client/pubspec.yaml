@@ -42,6 +42,7 @@ dependencies:
   flutter_secure_storage: ^7.0.1
   prompt_dialog: ^1.0.9
   window_manager: ^0.2.9
+  day_night_switcher: ^0.2.0+1
 
 dev_dependencies:
   flutter_test:

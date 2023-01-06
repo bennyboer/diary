@@ -51,7 +51,7 @@ class _EditorPageState extends State<EditorPage> {
       centerTitle: true,
       leading: BackButton(onPressed: () => _requestClose(context)),
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.black,
+      foregroundColor: Theme.of(context).textTheme.bodyText1?.color,
       elevation: 0,
     );
   }
@@ -177,13 +177,11 @@ class _EditorPageState extends State<EditorPage> {
     if (await PasswordManager.hasPassword()) {
       return await PasswordManager.readPassword() ?? "";
     } else {
-      var password = await prompt(
-        context,
-        title: const Text('Enter password'),
-        obscureText: true,
-        autoFocus: true,
-        showPasswordIcon: true
-      );
+      var password = await prompt(context,
+          title: const Text('Enter password'),
+          obscureText: true,
+          autoFocus: true,
+          showPasswordIcon: true);
       if (password == null) {
         throw false;
       }

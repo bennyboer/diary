@@ -18,16 +18,26 @@ void main() {
   });
 }
 
-class DiaryApp extends StatelessWidget {
+class DiaryApp extends StatefulWidget {
   const DiaryApp({super.key});
+
+  @override
+  State<StatefulWidget> createState() => DiaryAppState();
+
+  static DiaryAppState of(BuildContext context) =>
+      context.findAncestorStateOfType<DiaryAppState>()!;
+}
+
+class DiaryAppState extends State<DiaryApp> {
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Diary',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(),
+      darkTheme: ThemeData.dark(),
+      themeMode: _themeMode,
       initialRoute: '/',
       onGenerateRoute: (settings) {
         switch (settings.name) {
@@ -43,5 +53,22 @@ class DiaryApp extends StatelessWidget {
         }
       },
     );
+  }
+
+  void changeTheme(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
+
+  bool get isDark {
+    switch (_themeMode) {
+      case ThemeMode.dark:
+        return true;
+      case ThemeMode.system:
+        return MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+      default:
+        return false;
+    }
   }
 }

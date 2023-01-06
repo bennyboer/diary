@@ -2,10 +2,13 @@ import 'dart:collection';
 
 import 'package:client/edit_command.dart';
 import 'package:client/password_manager.dart';
+import 'package:day_night_switcher/day_night_switcher.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../main.dart';
 import '../native.dart';
 import '../storage.dart';
 
@@ -18,7 +21,7 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage>
     with WidgetsBindingObserver, WindowListener {
-  String result = "{Click button}";
+  static final DateFormat _monthDateFormat = DateFormat.yMMMM();
 
   late DateTime _selectedDay;
   late DateTime _focusedDay;
@@ -79,7 +82,7 @@ class _CalendarPageState extends State<CalendarPage>
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Expanded(
-              child: buildCalendar(),
+              child: buildCalendar(context),
             ),
           ],
         ),
@@ -87,7 +90,7 @@ class _CalendarPageState extends State<CalendarPage>
     );
   }
 
-  TableCalendar<dynamic> buildCalendar() {
+  TableCalendar<dynamic> buildCalendar(BuildContext context) {
     return TableCalendar(
       firstDay: _firstDay,
       lastDay: _lastDay,
@@ -107,6 +110,36 @@ class _CalendarPageState extends State<CalendarPage>
       headerStyle: const HeaderStyle(
         formatButtonVisible: false,
       ),
+      calendarBuilders: CalendarBuilders(
+        headerTitleBuilder: (context, date) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                _monthDateFormat.format(date),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            Transform.scale(
+              scale: 0.8,
+              child: SizedBox(
+                child: DayNightSwitcher(
+                  isDarkModeEnabled: DiaryApp.of(context).isDark,
+                  onStateChanged: (isDark) {
+                    DiaryApp.of(context)
+                        .changeTheme(isDark ? ThemeMode.dark : ThemeMode.light);
+                  },
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => print('TODO'),
+              icon: const Icon(Icons.settings),
+            ),
+          ],
+        ),
+      ),
       calendarStyle: const CalendarStyle(
         selectedDecoration: BoxDecoration(
           color: Colors.blue,
@@ -118,6 +151,11 @@ class _CalendarPageState extends State<CalendarPage>
         ),
         todayTextStyle: TextStyle(color: Colors.black),
         cellMargin: EdgeInsets.all(20),
+        markerDecoration: BoxDecoration(
+          color: Colors.greenAccent,
+          shape: BoxShape.circle,
+        ),
+        markerSize: 8,
       ),
       onPageChanged: (date) => _loadEntries(date),
       eventLoader: (date) => _getEntries(date),
