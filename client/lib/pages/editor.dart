@@ -1,9 +1,15 @@
 import 'package:client/native.dart';
+import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_highlight/themes/a11y-dark.dart';
+import 'package:flutter_highlight/themes/a11y-light.dart';
+import 'package:highlight/languages/markdown.dart';
 import 'package:intl/intl.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 
 import '../edit_command.dart';
+import '../main.dart';
 import '../password_manager.dart';
 import '../storage.dart';
 
@@ -20,8 +26,26 @@ class _EditorPageState extends State<EditorPage> {
   static final DateFormat _dateFormat = DateFormat('dd. MMMM yyyy');
 
   String _originalText = "";
-  final ScrollController _scrollController = ScrollController();
-  final TextEditingController _textEditingController = TextEditingController();
+  final CodeController _codeController =
+      CodeController(text: "", language: markdown);
+
+  bool _showCode = true;
+  bool _showPreview = false;
+
+  late Future<void> _loadEntryFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadEntryFuture = _load(context);
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +55,12 @@ class _EditorPageState extends State<EditorPage> {
         child: FutureBuilder(
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return _buildTextfield();
+              return _buildBody(context);
             } else {
               return _buildLoadingIndicator();
             }
           },
-          future: _load(context),
+          future: _loadEntryFuture,
         ),
       ),
     );
@@ -50,33 +74,37 @@ class _EditorPageState extends State<EditorPage> {
       title: Text(_dateFormat.format(widget.cmd.date)),
       centerTitle: true,
       leading: BackButton(onPressed: () => _requestClose(context)),
+      actions: [
+        ToggleButtons(
+          isSelected: [_showCode, _showPreview],
+          children: const [Icon(Icons.code), Icon(Icons.preview)],
+          onPressed: (index) {
+            setState(() {
+              if (index == 0) {
+                _showCode = !_showCode;
+
+                if (!_showPreview && !_showCode) {
+                  _showCode = true;
+                }
+              } else {
+                _showPreview = !_showPreview;
+
+                if (!_showPreview && !_showCode) {
+                  _showPreview = true;
+                }
+              }
+            });
+          },
+        )
+      ],
       backgroundColor: Colors.transparent,
       foregroundColor: Theme.of(context).textTheme.bodyText1?.color,
       elevation: 0,
     );
   }
 
-  Scrollbar _buildTextfield() => Scrollbar(
-        controller: _scrollController,
-        child: TextField(
-          controller: _textEditingController,
-          scrollController: _scrollController,
-          autofocus: true,
-          expands: true,
-          keyboardType: TextInputType.multiline,
-          maxLines: null,
-          autocorrect: false,
-          onChanged: (s) => {},
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.all(20.0),
-            isDense: true,
-          ),
-        ),
-      );
-
   Future<void> _requestClose(BuildContext context) async {
-    bool isUnchanged = _originalText == _textEditingController.text;
+    bool isUnchanged = _originalText == text;
     if (isUnchanged) {
       Navigator.pop(context);
       return;
@@ -151,7 +179,7 @@ class _EditorPageState extends State<EditorPage> {
     }
 
     _originalText = text;
-    _textEditingController.text = text;
+    _codeController.text = text;
   }
 
   Future<void> _save(BuildContext context) async {
@@ -171,7 +199,7 @@ class _EditorPageState extends State<EditorPage> {
         widget.cmd.date.day,
       );
 
-  String get text => _textEditingController.text;
+  String get text => _codeController.text;
 
   Future<String> _requestPassword(BuildContext context) async {
     if (await PasswordManager.hasPassword()) {
@@ -190,5 +218,51 @@ class _EditorPageState extends State<EditorPage> {
 
       return password;
     }
+  }
+
+  Widget _buildBody(BuildContext context) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_showCode) Expanded(child: _buildCodeEditor(context)),
+          if (_showCode && _showPreview) const VerticalDivider(),
+          if (_showPreview) Expanded(child: _buildPreview(context)),
+        ],
+      );
+
+  Widget _buildCodeEditor(BuildContext context) => CodeTheme(
+        data: CodeThemeData(
+          styles: DiaryApp.of(context).isDark(context)
+              ? a11yDarkTheme
+              : a11yLightTheme,
+        ),
+        child: CodeField(
+          controller: _codeController,
+          textStyle: const TextStyle(fontFamily: 'SourceCode'),
+          background: Theme.of(context).scaffoldBackgroundColor,
+          expands: true,
+          onChanged: (text) {
+            if (_showPreview) {
+              setState(() {});
+            }
+          },
+        ),
+      );
+
+  Widget _buildPreview(BuildContext context) {
+    return MarkdownWidget(
+      data: text,
+      styleConfig: StyleConfig(
+        markdownTheme: DiaryApp.of(context).isDark(context)
+            ? MarkdownTheme.darkTheme
+            : MarkdownTheme.lightTheme,
+        pConfig: PConfig(
+          textStyle: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).textTheme.bodyText1?.color,
+          ),
+        ),
+      ),
+    );
   }
 }

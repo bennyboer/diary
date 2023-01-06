@@ -125,7 +125,7 @@ class _CalendarPageState extends State<CalendarPage>
               scale: 0.8,
               child: SizedBox(
                 child: DayNightSwitcher(
-                  isDarkModeEnabled: DiaryApp.of(context).isDark,
+                  isDarkModeEnabled: DiaryApp.of(context).isDark(context),
                   onStateChanged: (isDark) {
                     DiaryApp.of(context)
                         .changeTheme(isDark ? ThemeMode.dark : ThemeMode.light);

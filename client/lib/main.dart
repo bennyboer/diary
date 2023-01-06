@@ -61,12 +61,12 @@ class DiaryAppState extends State<DiaryApp> {
     });
   }
 
-  bool get isDark {
+  bool isDark(BuildContext ctx) {
     switch (_themeMode) {
       case ThemeMode.dark:
         return true;
       case ThemeMode.system:
-        return MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+        return MediaQuery.platformBrightnessOf(ctx) == Brightness.dark;
       default:
         return false;
     }
