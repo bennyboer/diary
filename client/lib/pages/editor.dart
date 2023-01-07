@@ -148,7 +148,7 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Future<void> _load(BuildContext context) async {
-    var diaryFile = _getDiaryFile();
+    var diaryFile = await _getDiaryFile();
 
     var text = "";
     var shouldLoadEntry = !widget.cmd.createNewEntry;
@@ -183,7 +183,7 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Future<void> _save(BuildContext context) async {
-    var diaryFile = _getDiaryFile();
+    var diaryFile = await _getDiaryFile();
     var password = await _requestPassword(context);
 
     await api.save(
@@ -193,7 +193,7 @@ class _EditorPageState extends State<EditorPage> {
     );
   }
 
-  String _getDiaryFile() => DiaryStorage.getDiaryFilePath(
+  Future<String> _getDiaryFile() async => await DiaryStorage.getDiaryFilePath(
         widget.cmd.date.year,
         widget.cmd.date.month,
         widget.cmd.date.day,

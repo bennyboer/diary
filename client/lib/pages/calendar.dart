@@ -134,25 +134,30 @@ class _CalendarPageState extends State<CalendarPage>
               ),
             ),
             IconButton(
-              onPressed: () => print('TODO'),
+              onPressed: () async {
+                await Navigator.pushNamed(context, "/settings");
+                _loadEntries(_focusedDay);
+              },
               icon: const Icon(Icons.settings),
             ),
           ],
         ),
       ),
-      calendarStyle: const CalendarStyle(
-        selectedDecoration: BoxDecoration(
+      calendarStyle: CalendarStyle(
+        selectedDecoration: const BoxDecoration(
           color: Colors.blue,
           shape: BoxShape.circle,
         ),
-        todayDecoration: BoxDecoration(
+        todayDecoration: const BoxDecoration(
           color: Colors.black12,
           shape: BoxShape.circle,
         ),
-        todayTextStyle: TextStyle(color: Colors.black),
-        cellMargin: EdgeInsets.all(20),
+        todayTextStyle: const TextStyle(color: Colors.black),
+        cellMargin: const EdgeInsets.all(20),
         markerDecoration: BoxDecoration(
-          color: Colors.greenAccent,
+          color: DiaryApp.of(context).isDark(context)
+              ? Colors.greenAccent
+              : Colors.teal,
           shape: BoxShape.circle,
         ),
         markerSize: 8,
@@ -163,8 +168,10 @@ class _CalendarPageState extends State<CalendarPage>
   }
 
   Future<void> _loadEntries(DateTime date) async {
-    var diaryMonthFolderPath =
-        DiaryStorage.getDiaryMonthFolder(date.year, date.month);
+    var diaryMonthFolderPath = await DiaryStorage.getDiaryMonthFolder(
+      date.year,
+      date.month,
+    );
     var dates = await api.list(folder: diaryMonthFolderPath);
 
     availableEntries.clear();

@@ -45,6 +45,8 @@ dependencies:
   day_night_switcher: ^0.2.0+1
   code_text_field: ^1.1.0
   flutter_markdown: ^0.6.13
+  file_picker: ^5.2.4
+  shared_preferences: ^2.0.15
 
 dev_dependencies:
   flutter_test:
