@@ -206,7 +206,7 @@ class _EditorPageState extends State<EditorPage> {
       return await PasswordManager.readPassword() ?? "";
     } else {
       var password = await prompt(context,
-          title: const Text('Enter password'),
+          title: const Text('Enter password for encryption/decryption'),
           obscureText: true,
           autoFocus: true,
           showPasswordIcon: true);
@@ -214,7 +214,10 @@ class _EditorPageState extends State<EditorPage> {
         throw false;
       }
 
-      await PasswordManager.savePassword(password);
+      var rememberPassword = await PasswordManager.shouldRememberPassword();
+      if (rememberPassword) {
+        await PasswordManager.savePassword(password);
+      }
 
       return password;
     }

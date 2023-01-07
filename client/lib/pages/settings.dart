@@ -1,4 +1,5 @@
 import 'package:client/main.dart';
+import 'package:client/password_manager.dart';
 import 'package:client/storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  late Future<String> _diaryFolderFuture;
+  late Future<bool> _hasPasswordFuture;
+  late Future<bool> _rememberPasswordFuture;
+  late Future<bool> _askForPasswordAtStartupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _diaryFolderFuture = DiaryStorage.getDiaryFolder();
+    _hasPasswordFuture = PasswordManager.hasPassword();
+    _rememberPasswordFuture = PasswordManager.shouldRememberPassword();
+    _askForPasswordAtStartupFuture =
+        PasswordManager.shouldAskForPasswordAtStartup();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: _buildAppBar(context),
@@ -61,22 +78,27 @@ class _SettingsPageState extends State<SettingsPage> {
                         return const CircularProgressIndicator();
                       }
                     },
-                    future: DiaryStorage.getDiaryFolder(),
+                    future: _diaryFolderFuture,
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      String? selectedDirectory =
-                          await FilePicker.platform.getDirectoryPath(
-                        initialDirectory: await DiaryStorage.getDiaryFolder(),
-                      );
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        String? selectedDirectory =
+                            await FilePicker.platform.getDirectoryPath(
+                          initialDirectory: await DiaryStorage.getDiaryFolder(),
+                        );
 
-                      if (selectedDirectory != null) {
-                        await DiaryStorage.setDiaryFolder(selectedDirectory);
-                        setState(() {});
-                      }
-                    },
-                    child: const Text("Select..."),
-                  )
+                        if (selectedDirectory != null) {
+                          await DiaryStorage.setDiaryFolder(selectedDirectory);
+                          setState(() {
+                            _diaryFolderFuture = DiaryStorage.getDiaryFolder();
+                          });
+                        }
+                      },
+                      child: const Text("Select..."),
+                    ),
+                  ),
                 ],
               )
             ],
@@ -90,12 +112,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   textAlign: TextAlign.right,
                 ),
               ),
-              Checkbox(
-                value: true,
-                onChanged: (value) {
-                  // TODO
-                },
-              ),
+              Row(children: [
+                FutureBuilder(
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return Checkbox(
+                        value: snapshot.data as bool,
+                        onChanged: (value) async {
+                          await PasswordManager.setRememberPassword(
+                              value ?? false);
+                          setState(() {
+                            _rememberPasswordFuture =
+                                PasswordManager.shouldRememberPassword();
+                          });
+                        },
+                      );
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  },
+                  future: _rememberPasswordFuture,
+                )
+              ]),
             ],
           ),
           TableRow(
@@ -107,19 +145,81 @@ class _SettingsPageState extends State<SettingsPage> {
                   textAlign: TextAlign.right,
                 ),
               ),
-              Checkbox(
-                value: false,
-                onChanged: (value) {
-                  // TODO
-                },
-              ),
+              Row(children: [
+                FutureBuilder(
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      var data = snapshot.data as List<bool>;
+                      var rememberPassword = data[0];
+                      var askForPasswordAtStartup = data[1];
+
+                      var onChanged;
+                      if (rememberPassword) {
+                        onChanged = (value) async {
+                          await PasswordManager.setAskForPasswordAtStartup(
+                              value ?? false);
+                          setState(() {
+                            _askForPasswordAtStartupFuture =
+                                PasswordManager.shouldAskForPasswordAtStartup();
+                          });
+                        };
+                      }
+
+                      return Checkbox(
+                        value: askForPasswordAtStartup,
+                        onChanged: onChanged,
+                      );
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  },
+                  future: Future.wait([
+                    _rememberPasswordFuture,
+                    _askForPasswordAtStartupFuture
+                  ]),
+                ),
+              ]),
+            ],
+          ),
+          TableRow(
+            children: [
+              Container(),
+              Row(
+                children: [
+                  FutureBuilder(
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        var hasPassword = snapshot.data as bool;
+                        var onPressed;
+                        if (hasPassword) {
+                          onPressed = () async {
+                            await PasswordManager.clear();
+                            setState(() {
+                              _hasPasswordFuture =
+                                  PasswordManager.hasPassword();
+                            });
+                          };
+                        }
+
+                        return ElevatedButton(
+                          onPressed: onPressed,
+                          child: const Text("Forget password"),
+                        );
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
+                    },
+                    future: _hasPasswordFuture,
+                  ),
+                ],
+              )
             ],
           ),
         ],
       );
 
   Widget _buildThemeSwitcher(BuildContext context) {
-    ThemeMode themeMode = DiaryApp.of(context).themeMode;
+    var themeMode = DiaryApp.of(context).themeMode;
 
     return ToggleButtons(
       isSelected: [
@@ -139,6 +239,7 @@ class _SettingsPageState extends State<SettingsPage> {
             DiaryApp.of(context).changeTheme(ThemeMode.dark);
             break;
         }
+        setState(() {});
       },
       children: const [
         Text("System"),

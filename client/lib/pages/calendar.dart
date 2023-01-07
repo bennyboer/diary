@@ -5,6 +5,7 @@ import 'package:client/password_manager.dart';
 import 'package:day_night_switcher/day_night_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -50,8 +51,7 @@ class _CalendarPageState extends State<CalendarPage>
     _firstDay = DateTime(now.year - 10, now.month, 1);
     _lastDay = DateTime(now.year + 10, now.month, 1);
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _loadEntries(_focusedDay));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onStartup());
   }
 
   @override
@@ -129,6 +129,7 @@ class _CalendarPageState extends State<CalendarPage>
                   onStateChanged: (isDark) {
                     DiaryApp.of(context)
                         .changeTheme(isDark ? ThemeMode.dark : ThemeMode.light);
+                    setState(() {});
                   },
                 ),
               ),
@@ -204,5 +205,36 @@ class _CalendarPageState extends State<CalendarPage>
     );
 
     _loadEntries(_focusedDay);
+  }
+
+  Future<void> _onStartup() async {
+    _loadEntries(_focusedDay);
+
+    var shouldAskForPassword =
+        await PasswordManager.shouldAskForPasswordAtStartup();
+    if (shouldAskForPassword) {
+      await _requestPassword(context);
+    }
+  }
+
+  Future<String> _requestPassword(BuildContext context) async {
+    if (await PasswordManager.hasPassword()) {
+      return await PasswordManager.readPassword() ?? "";
+    } else {
+      var password = await prompt(
+        context,
+        title: const Text('Enter password to access diary'),
+        obscureText: true,
+        autoFocus: true,
+        showPasswordIcon: true,
+      );
+      if (password == null) {
+        throw false;
+      }
+
+      await PasswordManager.savePassword(password);
+
+      return password;
+    }
   }
 }
