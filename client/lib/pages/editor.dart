@@ -3,9 +3,9 @@ import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_highlight/themes/a11y-dark.dart';
 import 'package:flutter_highlight/themes/a11y-light.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:highlight/languages/markdown.dart';
 import 'package:intl/intl.dart';
-import 'package:markdown_widget/markdown_widget.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 
 import '../edit_command.dart';
@@ -186,7 +186,7 @@ class _EditorPageState extends State<EditorPage> {
     var diaryFile = _getDiaryFile();
     var password = await _requestPassword(context);
 
-    api.save(
+    await api.save(
       filePath: diaryFile,
       password: password,
       data: text,
@@ -251,20 +251,8 @@ class _EditorPageState extends State<EditorPage> {
       );
 
   Widget _buildPreview(BuildContext context) {
-    return MarkdownWidget(
+    return Markdown(
       data: text,
-      padding: const EdgeInsets.all(8),
-      styleConfig: StyleConfig(
-        markdownTheme: DiaryApp.of(context).isDark(context)
-            ? MarkdownTheme.darkTheme
-            : MarkdownTheme.lightTheme,
-        pConfig: PConfig(
-          textStyle: TextStyle(
-            fontSize: 16,
-            color: Theme.of(context).textTheme.bodyText1?.color,
-          ),
-        ),
-      ),
     );
   }
 }
