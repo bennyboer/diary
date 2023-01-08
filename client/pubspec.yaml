@@ -60,7 +60,6 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   ffigen: ^7.2.4
   freezed: ^2.3.2
-  flutter_launcher_icons: ^0.11.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -110,9 +109,3 @@ flutter:
         - asset: assets/fonts/sourceCode/SourceCodePro-ExtraLightItalic.ttf
           style: italic
           weight: 200
-
-flutter_icons:
-  image_path: "assets/icon.png"
-  windows:
-    generate: true
-    icon_size: 48
