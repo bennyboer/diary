@@ -14,13 +14,16 @@ Thus, I decided to create a digital diary that is secure and easy to use.
 
 ## Technology
 
-The project is a local Desktop application that stores all data locally in a Git repository.
-If you want to save your date in the cloud you can add a remote repository (should be private).
+The project is a local Desktop application that stores all data on the local file system.
 All files in the repository are encrypted using the ChaCha20-Poly1305 cipher which uses a 256-Bit key.
 That is plenty to protect your diary for the next years.
 The key is derived from a password using the **Argon2** algorithm, which is currently the recommended algorithm.
 You can only decrypt the diary again using the same password.
 In the future we might add support for a second factor like a FIDO2 key that offers a higher level of security.
+
+If you want to save your data in the cloud you can bind a directory to a cloud storage service like Dropbox or Google
+Drive.
+Since your data is encrypted and the cloud service private your diary should be safe from prying eyes.
 
 ## Installation
 
