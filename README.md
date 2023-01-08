@@ -36,6 +36,12 @@ flutter build windows
 
 You'll find the executable in `client/build/windows/runner/Release/`.
 
+### Build Installer
+
+```bash
+flutter pub run msix:create
+```
+
 ## Usage
 
 The app currently consists of a simple calendar that just shows whether a day has an entry or not.

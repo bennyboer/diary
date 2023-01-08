@@ -60,6 +60,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   ffigen: ^7.2.4
   freezed: ^2.3.2
+  msix: ^3.7.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -109,3 +110,12 @@ flutter:
         - asset: assets/fonts/sourceCode/SourceCodePro-ExtraLightItalic.ttf
           style: italic
           weight: 200
+
+msix_config:
+  display_name: Diary
+  publisher_display_name: Benjamin Eder
+  identity_name: de.be.diary
+  msix_version: 1.0.0.0
+  logo_path: assets/icon.png
+  sign_msix: false
+  publisher: CN=Benjamin Eder

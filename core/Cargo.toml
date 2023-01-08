@@ -9,5 +9,5 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "1.59.0"
-vault-core = "0.1.0"
+vault-core = "0.1.1"
 zeroize = "1.5.7"
